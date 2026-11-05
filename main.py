@@ -1,7 +1,8 @@
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException, Form
 from fastapi.templating import Jinja2Templates
+from fastapi.responses import RedirectResponse
 
 DB_URL = "postgresql+psycopg://sd4:sd4@localhost:5432/board"
 engine = create_engine(DB_URL)
@@ -23,6 +24,23 @@ templates = Jinja2Templates(directory='templates')
 @app.get('/')
 def home():
     return {'hello': 'hi'}
+
+@app.get('/posts/new')
+def post_new(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name='new.html'
+    )
+
+@app.post('/posts/create')
+def post_create(title: str = Form(), content: str = Form()):
+    with Session(engine) as db:
+        post=Post(title=title, content=content)
+        db.add(post) #db에 저장되는순간 post가 id받음
+        db.commit()
+
+        # from fastapi.response import RedirectionResponse
+        return RedirectResponse(f'/posts/{post.id}', status_code=303) # post는 방금 생성된 id
 
 @app.get('/posts')
 def post_list(request: Request):
