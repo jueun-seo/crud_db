@@ -27,9 +27,20 @@ def home():
 @app.get('/posts')
 def post_list(request: Request):
     with Session(engine) as db:
-        posts=db.scalars(select(Post)).all #전체데이터조화는 스칼라함수 #Post라는 클래스
+        posts = db.scalars(select(Post)).all() #전체데이터조화는 스칼라함수 #Post라는 클래스
         return templates.TemplateResponse(
             request=request,
             name='list.html',
             context={'posts':posts}
         )
+
+@app.get('/posts/{post_id}')
+def post_detail(request: Request, post_id: int):
+    with Session(engine) as db:
+        post = db.get(Post, post_id)
+
+    return templates.TemplateResponse(
+        request=request,
+        name='detail.html',
+        context={'post':post}
+    )
